@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  admin
+  operator
+}
+
+enum ProjectStatus {
+  draft
+  in_progress
+  completed
+  archived
+}
+
+model Profile {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  lastName  String   @map("last_name")
+  role      UserRole @default(operator)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  createdProjects   Project[]         @relation("CreatedBy")
+  memberships       ProjectMember[]
+  uploadedPhotos    ProjectPhoto[]    @relation("UploadedBy")
+  uploadedDocuments ProjectDocument[] @relation("UploadedBy")
+
+  @@map("profiles")
+}
+
+model ProjectType {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  projects      Project[]
+  stages        ProjectStage[]
+  photoSlots    PhotoSlot[]
+  documentSlots DocumentSlot[]
+
+  @@map("project_types")
+}
+
+model ProjectStage {
+  id            String  @id @default(uuid())
+  projectTypeId String  @map("project_type_id")
+  order         Int
+  name          String
+  description   String?
+
+  projectType ProjectType @relation(fields: [projectTypeId], references: [id])
+  projects    Project[]
+
+  @@unique([projectTypeId, order])
+  @@map("project_stages")
+}
+
+model PhotoSlot {
+  id            String  @id @default(uuid())
+  projectTypeId String  @map("project_type_id")
+  position      Int
+  name          String
+  required      Boolean @default(true)
+
+  projectType ProjectType    @relation(fields: [projectTypeId], references: [id])
+  photos      ProjectPhoto[]
+
+  @@unique([projectTypeId, position])
+  @@map("photo_slots")
+}
+
+model DocumentSlot {
+  id            String  @id @default(uuid())
+  projectTypeId String  @map("project_type_id")
+  position      Int
+  name          String
+  required      Boolean @default(true)
+  acceptedTypes String? @map("accepted_types")
+
+  projectType ProjectType       @relation(fields: [projectTypeId], references: [id])
+  documents   ProjectDocument[]
+
+  @@unique([projectTypeId, position])
+  @@map("document_slots")
+}
+
+model Project {
+  id             String        @id @default(uuid())
+  name           String
+  description    String?
+  address        String
+  zone           String?
+  startDate      DateTime?     @map("start_date")
+  endDate        DateTime?     @map("end_date")
+  currentStageId String?       @map("current_stage_id")
+  status         ProjectStatus @default(draft)
+  projectTypeId  String        @map("project_type_id")
+  createdById    String        @map("created_by_id")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  projectType  ProjectType       @relation(fields: [projectTypeId], references: [id])
+  currentStage ProjectStage?     @relation(fields: [currentStageId], references: [id])
+  createdBy    Profile           @relation("CreatedBy", fields: [createdById], references: [id])
+  members      ProjectMember[]
+  photos       ProjectPhoto[]
+  documents    ProjectDocument[]
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  id         String   @id @default(uuid())
+  projectId  String   @map("project_id")
+  userId     String   @map("user_id")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    Profile @relation(fields: [userId], references: [id])
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+model ProjectPhoto {
+  id           String   @id @default(uuid())
+  projectId    String   @map("project_id")
+  slotId       String   @map("slot_id")
+  fileUrl      String   @map("file_url")
+  uploadedById String   @map("uploaded_by_id")
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  slot       PhotoSlot @relation(fields: [slotId], references: [id])
+  uploadedBy Profile   @relation("UploadedBy", fields: [uploadedById], references: [id])
+
+  @@unique([projectId, slotId])
+  @@map("project_photos")
+}
+
+model ProjectDocument {
+  id           String   @id @default(uuid())
+  projectId    String   @map("project_id")
+  slotId       String   @map("slot_id")
+  fileUrl      String   @map("file_url")
+  fileName     String   @map("file_name")
+  uploadedById String   @map("uploaded_by_id")
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+
+  project    Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  slot       DocumentSlot @relation(fields: [slotId], references: [id])
+  uploadedBy Profile      @relation("UploadedBy", fields: [uploadedById], references: [id])
+
+  @@unique([projectId, slotId])
+  @@map("project_documents")
+}

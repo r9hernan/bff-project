@@ -1,0 +1,52 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "parser": "@typescript-eslint/parser",
+      "plugins": ["@typescript-eslint"],
+      "rules": {
+        "no-use-before-define": "off",
+        "@typescript-eslint/no-use-before-define": "error",
+        "camelcase": ["error", {
+          "properties": "never",
+          "ignoreDestructuring": true,
+          "allow": ["^[a-z_]+$"]
+        }],
+        "curly": "error",
+        "eqeqeq": "error",
+        "no-console": ["warn", { "allow": ["warn", "error"] }],
+        "no-alert": "error",
+        "no-else-return": "error",
+        "no-empty-function": "error",
+        "no-return-await": "error",
+        "no-return-assign": "error",
+        "no-unused-expressions": "error",
+        "no-useless-return": "error",
+        "no-var": "error",
+        "prefer-const": "error",
+        "no-trailing-spaces": "error",
+        "quotes": ["error", "single"],
+        "semi": ["error", "never"],
+        "comma-dangle": ["error", "never"],
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": ["warn", {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_"
+        }],
+        "@typescript-eslint/no-explicit-any": "warn",
+        "@typescript-eslint/consistent-type-imports": ["warn", {
+          "prefer": "type-imports"
+        }],
+        "react-hooks/exhaustive-deps": "warn",
+        "react/no-unescaped-entities": "off"
+      }
+    },
+    {
+      "files": ["src/app/api/**/*.ts"],
+      "rules": {
+        "camelcase": "off"
+      }
+    }
+  ]
+}
