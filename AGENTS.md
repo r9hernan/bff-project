@@ -1,5 +1,16 @@
 # BFF Project - Contexto y Decisiones
 
+## Estado Actual
+- **Última actualización**: 2026-06-26
+- **Repositorio**: https://github.com/r9hernan/bff-project
+- **Features completadas**:
+  - Validación Zod en API routes de autenticación
+  - Error boundaries (error.tsx, not-found.tsx, global-error.tsx, loading.tsx)
+  - Esquema de BD con Prisma + PostgreSQL (9 tablas)
+  - Seed data (usuarios + tipos de proyecto con etapas y slots)
+  - Servicio de validación de etapas (canAdvanceStage, advanceStage)
+- **Próximos pasos**: Conectar API routes con Prisma, implementar middleware.ts, migrar a HttpOnly cookies
+
 ## Origen
 Este proyecto fue creado a partir de `ideal-front` (marketplace inmobiliario) migrando solo los módulos genéricos/reutilizables.
 
@@ -18,12 +29,16 @@ Este proyecto fue creado a partir de `ideal-front` (marketplace inmobiliario) mi
 ## Arquitectura BFF
 El proyecto actúa como Backend-For-Frontend. Las API routes en `src/app/api/` son la capa BFF que consume servicios externos.
 
-### API Routes existentes (con mocks)
-- `POST /api/auth/login` - Login
-- `POST /api/auth/forgot-password` - Recuperar contraseña
-- `POST /api/auth/reset-password` - Resetear contraseña
-- `GET /api/users/me` - Perfil del usuario
-- `GET/POST /api/projects` - CRUD proyectos
+### API Routes existentes
+- `POST /api/auth/login` - Login (con validación Zod)
+- `POST /api/auth/forgot-password` - Recuperar contraseña (con validación Zod)
+- `POST /api/auth/reset-password` - Resetear contraseña (con validación Zod)
+- `GET /api/users/me` - Perfil del usuario (mock)
+- `GET/POST /api/projects` - CRUD proyectos (mock)
+
+### Validación de requests
+- Schemas Zod en `src/lib/validations/auth.schemas.ts`
+- Las API routes de auth validan con `safeParse()` y retornan errores específicos
 
 ## Roles de Usuario
 Solo 2 roles:
@@ -167,4 +182,23 @@ pnpm type-check   # TypeScript check
 ## Variables de Entorno
 ```
 NEXT_PUBLIC_API_URL=http://localhost:3000
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/bff_dev"
 ```
+
+## Decisiones Técnicas
+
+### Base de Datos
+- **PostgreSQL local** para desarrollo (mismo motor que Supabase)
+- **Prisma 7.x** con driver adapter `pg` (estándar de la industria)
+- **Etapas configurables por tipo de proyecto**: Cada tipo define sus propias etapas
+- **Slots de fotos/documentos**: 1 archivo por slot, configurables por tipo
+
+### Autenticación (pendiente)
+- Se usará **Supabase Auth** cuando se migre a la nube
+- Por ahora: JWT con tokens en localStorage (pendiente migrar a HttpOnly cookies)
+
+### Estructura del proyecto
+- `src/lib/prisma.ts` - Cliente Prisma singleton con driver adapter
+- `src/services/project-validation.ts` - Lógica de negocio para avance de etapas
+- `src/lib/validations/` - Schemas Zod para validación de requests
+- `prisma/seed.ts` - Datos iniciales (usuarios + tipos de proyecto)
